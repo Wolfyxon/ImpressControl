@@ -13,12 +13,15 @@ const DEFAULT_PORT: u16 = 1599;
 
 const TIMEOUT: Duration = Duration::from_secs(5);
 
+const KEY_PREV: Code = Code::KeyG;
+const KEY_NEXT: Code = Code::KeyH;
+
 fn main() {
     println!("Welcome to ImpressControl");
 
     let input_manager = GlobalHotKeyManager::new().expect("Failed to create keyboard input manager");
-    let key_prev = HotKey::new(None, Code::KeyG);
-    let key_next = HotKey::new(None, Code::KeyH);
+    let key_prev = HotKey::new(None, KEY_PREV);
+    let key_next = HotKey::new(None, KEY_NEXT);
     
     input_manager.register(key_prev).expect("Failed to register key");
     input_manager.register(key_next).expect("Failed to register key");
@@ -68,7 +71,12 @@ fn await_auth(stream: &mut TcpStream) {
         let data = stream_read(stream);
 
         if data.contains("LO_SERVER_SERVER_PAIRED") {
-            println!("Pairing successful!");
+            println!("Pairing successful! \n");
+            println!("Use the following keys to control the presentation: ");
+
+            println!("{}: Previous slide/animation", KEY_PREV);
+            println!("{}: Next slide/animation", KEY_NEXT);
+            
             break;
         }
     }
