@@ -2,7 +2,7 @@
 use std::{io::Write, net::TcpStream, time::Duration};
 use console::{ask_default, confirm_or_exit};
 use global_hotkey::{hotkey::{Code, HotKey}, GlobalHotKeyEvent, GlobalHotKeyManager, HotKeyState};
-use net_util::stream_read;
+use net_util::{signal, stream_read};
 
 mod console;
 mod net_util;
@@ -26,8 +26,7 @@ fn main() {
     stream.set_read_timeout(Some(TIMEOUT)).expect("Failed to set read timeout");
     
     handshake(&mut stream);
-
-    stream.write("presentation_start\n\n".as_bytes()).expect("oh no");
+    signal(&mut stream, "presentation_start");
 
     loop {
         process_input(&mut stream, &key_next);
@@ -41,7 +40,7 @@ fn process_input(stream: &mut TcpStream, key_next: &HotKey) {
         }
 
         if event.id() == key_next.id() {
-            stream.write("transition_next\n\n".as_bytes()).expect("oh no");
+            signal(stream, "transition_next");
         }
     }
 }

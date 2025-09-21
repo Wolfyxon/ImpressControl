@@ -1,4 +1,4 @@
-use std::{io::Read, net::TcpStream};
+use std::{io::{Read, Write}, net::TcpStream};
 
 pub fn stream_read(stream: &mut TcpStream) -> String {
     let mut buf = [0; 128];
@@ -18,4 +18,14 @@ pub fn stream_read(stream: &mut TcpStream) -> String {
             return String::new();
         }
     }
+}
+
+pub fn signal(stream: &mut TcpStream, message: impl Into<String>) {
+    let msg = message.into();
+    let data = format!("{}\n\n", msg);
+
+    stream.write(data.as_bytes()).unwrap_or_else(|err| {
+        eprintln!("Send error '{msg}': {err}");
+        0
+    });
 }
