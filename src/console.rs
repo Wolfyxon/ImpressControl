@@ -1,6 +1,6 @@
 use std::{io::{self, BufRead, Write}, process::exit};
 
-pub fn readLine() -> String {
+pub fn read_line() -> String {
     let stdin = io::stdin();
     let mut res = String::new();
 
@@ -11,7 +11,7 @@ pub fn readLine() -> String {
 
 pub fn ask(msg: impl Into<String>) -> String {
     print(format!("{}: ", msg.into()));
-    readLine()
+    read_line()
 }
 
 pub fn ask_default(msg: impl Into<String>, default: impl Into<String>) -> String {
