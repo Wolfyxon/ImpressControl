@@ -45,10 +45,12 @@ fn process_input(stream: &mut TcpStream, key_prev: &HotKey, key_next: &HotKey) {
         }
 
         if event.id() == key_prev.id() {
+            println!("> Previous");
             signal(stream, "transition_previous");
         }
 
         if event.id() == key_next.id() {
+            println!("> Next");
             signal(stream, "transition_next");
         }
     }
