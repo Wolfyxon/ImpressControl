@@ -1,6 +1,7 @@
 
 use std::{io::Write, net::TcpStream, time::Duration};
 use console::{ask_default, confirm_or_exit};
+use global_hotkey::{hotkey::{Code, HotKey}, GlobalHotKeyEvent, GlobalHotKeyManager, HotKeyState};
 use net_util::stream_read;
 
 mod console;
@@ -15,11 +16,34 @@ const TIMEOUT: Duration = Duration::from_secs(5);
 fn main() {
     println!("Welcome to ImpressControl");
 
+    let input_manager = GlobalHotKeyManager::new().expect("Failed to create keyboard input manager");
+    let key_next = HotKey::new(None, Code::KeyG);
+
+    input_manager.register(key_next).expect("Failed to register key");
+
     let mut stream = make_stream();
     stream.set_write_timeout(Some(TIMEOUT)).expect("Failed to set write timeout");
     stream.set_read_timeout(Some(TIMEOUT)).expect("Failed to set read timeout");
     
     handshake(&mut stream);
+
+    stream.write("presentation_start\n\n".as_bytes()).expect("oh no");
+
+    loop {
+        process_input(&mut stream, &key_next);
+    }
+}
+
+fn process_input(stream: &mut TcpStream, key_next: &HotKey) {
+    if let Ok(event) = GlobalHotKeyEvent::receiver().try_recv() {
+        if event.state() != HotKeyState::Pressed {
+            return;
+        }
+
+        if event.id() == key_next.id() {
+            stream.write("transition_next\n\n".as_bytes()).expect("oh no");
+        }
+    }
 }
 
 fn handshake(stream: &mut TcpStream) {
@@ -27,7 +51,7 @@ fn handshake(stream: &mut TcpStream) {
     let data = format!("LO_SERVER_CLIENT_PAIR\n{}\n{}\n\n", USER_AGENT, pin);
 
     stream.write(data.as_bytes()).expect("Handshake failed");
-    
+
     println!("PIN: {}", pin);
     println!("Go to 'Slide Show' > 'Impress Remote' and enter the pin");
     
