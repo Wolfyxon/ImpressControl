@@ -17,10 +17,12 @@ fn main() {
     println!("Welcome to ImpressControl");
 
     let input_manager = GlobalHotKeyManager::new().expect("Failed to create keyboard input manager");
-    let key_next = HotKey::new(None, Code::KeyG);
-
+    let key_prev = HotKey::new(None, Code::KeyG);
+    let key_next = HotKey::new(None, Code::KeyH);
+    
+    input_manager.register(key_prev).expect("Failed to register key");
     input_manager.register(key_next).expect("Failed to register key");
-
+    
     let mut stream = make_stream();
     stream.set_write_timeout(Some(TIMEOUT)).expect("Failed to set write timeout");
     stream.set_read_timeout(Some(TIMEOUT)).expect("Failed to set read timeout");
@@ -29,14 +31,18 @@ fn main() {
     signal(&mut stream, "presentation_start");
 
     loop {
-        process_input(&mut stream, &key_next);
+        process_input(&mut stream, &key_prev, &key_next);
     }
 }
 
-fn process_input(stream: &mut TcpStream, key_next: &HotKey) {
+fn process_input(stream: &mut TcpStream, key_prev: &HotKey, key_next: &HotKey) {
     if let Ok(event) = GlobalHotKeyEvent::receiver().try_recv() {
         if event.state() != HotKeyState::Pressed {
             return;
+        }
+
+        if event.id() == key_prev.id() {
+            signal(stream, "transition_previous");
         }
 
         if event.id() == key_next.id() {
