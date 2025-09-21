@@ -13,8 +13,8 @@ const DEFAULT_PORT: u16 = 1599;
 
 const TIMEOUT: Duration = Duration::from_secs(5);
 
-const KEY_PREV: Code = Code::KeyG;
-const KEY_NEXT: Code = Code::KeyH;
+const KEY_PREV: Code = Code::KeyK;
+const KEY_NEXT: Code = Code::KeyL;
 
 fn main() {
     println!("Welcome to ImpressControl");
