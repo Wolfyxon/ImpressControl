@@ -8,9 +8,12 @@ A key based controller for LibreOffice Impress designed mostly to change slides 
 3. Run the program
 4. Enter the address (not entering anything and pressing enter will use default settings)
 5. Follow the pairing instructions as you'll see
-6. Done!
+6. Start the presentation
+7. You should now be able to control it as described below
 
 ### Controls
+(They always work, no matter if the program's window is focused) 
+
 - `Q` - previous slide/animation
 - `E` - next slide/animation
 
