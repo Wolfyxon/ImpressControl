@@ -5,7 +5,10 @@ pub fn stream_read(stream: &mut TcpStream) -> String {
 
     match stream.read(&mut buf) {
         Ok(_) => (),
-        Err(err) => { return String::new(); }
+        Err(err) => {
+            eprintln!("Read error: {}", err); 
+            return String::new(); 
+        }
     };
 
     match String::from_utf8(buf.to_vec()) {
