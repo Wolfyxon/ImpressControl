@@ -31,7 +31,7 @@ fn main() {
     stream.set_read_timeout(Some(TIMEOUT)).expect("Failed to set read timeout");
     
     handshake(&mut stream);
-    signal(&mut stream, "presentation_start");
+    //signal(&mut stream, "presentation_start");
 
     loop {
         process_input(&mut stream, &key_prev, &key_next);
