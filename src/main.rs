@@ -84,7 +84,7 @@ fn net_loop<'a>(websocket: &mut WebSocket<&'a TcpStream>, impress_client: &mut T
                 }
             },
             Err(err) => match err {
-                tungstenite::Error::ConnectionClosed => {
+                tungstenite::Error::ConnectionClosed | tungstenite::Error::AlreadyClosed => {
                     println!("Disconnected, waiting for new connections");
                     break;
                 },
@@ -94,7 +94,7 @@ fn net_loop<'a>(websocket: &mut WebSocket<&'a TcpStream>, impress_client: &mut T
         }
 
         match impress_client.read(&mut impress_buf) {
-            Ok(size) =>  {
+            Ok(_) =>  {
                 let msg = String::from_utf8(impress_buf.to_vec());
 
                 match msg {
@@ -105,7 +105,12 @@ fn net_loop<'a>(websocket: &mut WebSocket<&'a TcpStream>, impress_client: &mut T
                 }
             },
             Err(err) => {
-                println!("{}", err);
+                let kind = err.kind();
+
+                match kind {
+                    io::ErrorKind::WouldBlock => (),
+                    _ => eprintln!("Impress read error: {}", kind)
+                }
             }
         }
     }
@@ -131,6 +136,8 @@ fn await_auth(stream: &mut TcpStream) {
             println!("Pairing successful! \n");            
             break;
         }
+
+        stream.set_nonblocking(true).expect("Unable to make nonblocking client");
     }
 }
 
@@ -143,7 +150,6 @@ fn make_client() -> TcpStream {
         Ok(stream) => {
             stream.set_write_timeout(Some(TIMEOUT)).expect("Failed to set write timeout");
             stream.set_read_timeout(Some(TIMEOUT)).expect("Failed to set read timeout");
-            stream.set_nonblocking(true).expect("Unable to make nonblocking client");
 
             stream
         },
