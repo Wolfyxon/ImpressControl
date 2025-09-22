@@ -89,8 +89,12 @@ fn websocket_loop<'a>(websocket: &mut WebSocket<&'a TcpStream>, impress_client: 
     match websocket.read() {
         Ok(msg) => match msg.to_text() {
             Ok(str) => {
-                let string = debug_msg_string(str.to_string());
-                println!("WebSocket -> '{}' -> Impress", string);
+                if str.is_empty() {
+                    return true;
+                }
+
+                let debug_string = debug_msg_string(str.to_string());
+                println!("WebSocket -> '{}' -> Impress", debug_string);
 
                 impress_client.write(str.as_bytes()).unwrap_or_else(|err| {
                     eprintln!("Forward to Impress failed: {}", err);
@@ -121,6 +125,10 @@ fn impress_loop<'a>(websocket: &mut WebSocket<&'a TcpStream>, impress_client: &m
 
             match msg {
                 Ok(msg) => {
+                    if msg.is_empty() {
+                        return;
+                    }
+
                     println!(
                         "Impress -> '{}' -> WebSocket",
                         debug_msg_string(msg.to_owned())
