@@ -1,7 +1,4 @@
-use std::{
-    io::Read,
-    net::TcpStream,
-};
+use std::{io::Read, net::TcpStream};
 
 pub fn stream_read(stream: &mut TcpStream) -> String {
     let mut buf = [0; 128];

@@ -7,7 +7,9 @@ use std::{
     time::Duration,
 };
 use tungstenite::{
-    accept_hdr, handshake::{client::Request, server::Response}, Message, WebSocket
+    accept_hdr,
+    handshake::{client::Request, server::Response},
+    Message, WebSocket,
 };
 
 mod console;
@@ -38,7 +40,7 @@ fn main() {
                     .unwrap_or("unknown".to_string());
                 println!("Incoming connection from: {}", str_address);
 
-                let mut ws = init_websocket(&server, &stream);
+                let mut ws = init_websocket(&stream);
 
                 loop {
                     if !websocket_loop(&mut ws, &mut client) {
@@ -56,7 +58,7 @@ fn main() {
     }
 }
 
-fn init_websocket<'a>(server: &TcpListener, stream: &'a TcpStream) -> WebSocket<&'a TcpStream> {
+fn init_websocket<'a>(stream: &'a TcpStream) -> WebSocket<&'a TcpStream> {
     stream.set_nonblocking(false).unwrap();
 
     let ws = accept_hdr(stream, |_req: &Request, res: Response| Ok(res));
@@ -89,7 +91,7 @@ fn websocket_loop<'a>(websocket: &mut WebSocket<&'a TcpStream>, impress_client: 
             Ok(str) => {
                 let string = debug_msg_string(str.to_string());
                 println!("WebSocket -> '{}' -> Impress", string);
-                
+
                 impress_client.write(str.as_bytes()).unwrap_or_else(|err| {
                     eprintln!("Forward to Impress failed: {}", err);
                     0
@@ -119,11 +121,16 @@ fn impress_loop<'a>(websocket: &mut WebSocket<&'a TcpStream>, impress_client: &m
 
             match msg {
                 Ok(msg) => {
-                    println!("Impress -> '{}' -> WebSocket", debug_msg_string(msg.to_owned()));
+                    println!(
+                        "Impress -> '{}' -> WebSocket",
+                        debug_msg_string(msg.to_owned())
+                    );
 
-                    websocket.write(Message::text(msg.trim_matches('\0'))).unwrap_or_else(|err| {
-                        eprintln!("Forward to WebSocket failed: {}", err);
-                    });
+                    websocket
+                        .write(Message::text(msg.trim_matches('\0')))
+                        .unwrap_or_else(|err| {
+                            eprintln!("Forward to WebSocket failed: {}", err);
+                        });
 
                     websocket.flush().unwrap_or_else(|err| {
                         eprintln!("Failed to flush WebSocket: {}", err);
