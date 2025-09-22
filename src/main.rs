@@ -33,28 +33,33 @@ fn main() {
 
     for stream in server.incoming() {
         match stream {
-            Ok(stream) => {
-                let str_address = stream
-                    .local_addr()
-                    .map(|a| a.to_string())
-                    .unwrap_or("unknown".to_string());
-                println!("Incoming connection from: {}", str_address);
-
-                let mut ws = init_websocket(&stream);
-
-                loop {
-                    if !websocket_loop(&mut ws, &mut client) {
-                        break;
-                    }
-
-                    impress_loop(&mut ws, &mut client);
-                }
+            Ok(mut stream) => {
+                handle_connection(&mut stream, &mut client);
             }
             Err(err) => {
                 eprintln!("Incoming connection failed: {}", err);
                 return;
             }
         }
+    }
+}
+
+fn handle_connection<'a>(stream: &mut TcpStream, impress_client: &mut TcpStream) {
+    let str_address = stream
+        .local_addr()
+        .map(|a| a.to_string())
+        .unwrap_or("unknown".to_string());
+    
+    println!("New connection from: {}", str_address);
+
+    let mut ws = init_websocket(&stream);
+
+    loop {
+        if !websocket_loop(&mut ws, impress_client) {
+            break;
+        }
+
+        impress_loop(&mut ws, impress_client);
     }
 }
 
