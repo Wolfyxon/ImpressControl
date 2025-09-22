@@ -35,7 +35,7 @@ fn main() {
                     if !websocket_loop(&mut ws, &mut client) {
                         break;
                     }
-                    
+
                     impress_loop(&mut ws, &mut client);
                 }
             },
@@ -142,7 +142,9 @@ fn await_auth(stream: &mut TcpStream) {
         let data = stream_read(stream);
 
         if data.contains("LO_SERVER_SERVER_PAIRED") {
-            println!("Pairing successful! \n");            
+            println!("Pairing successful!");           
+            println!("Waiting for WebSocket connections at ws://localhost:{}", DEFAULT_SERVER_PORT);
+            
             break;
         }
 
