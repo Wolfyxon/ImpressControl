@@ -124,6 +124,10 @@ fn impress_loop<'a>(websocket: &mut WebSocket<&'a TcpStream>, impress_client: &m
                     websocket.write(Message::text(msg)).unwrap_or_else(|err| {
                         eprintln!("Forward to WebSocket failed: {}", err);
                     });
+
+                    websocket.flush().unwrap_or_else(|err| {
+                        eprintln!("Failed to flush WebSocket: {}", err);
+                    });
                 }
                 Err(err) => eprintln!("Invalid message from Impress: {}", err),
             }
