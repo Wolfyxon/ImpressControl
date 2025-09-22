@@ -1,8 +1,16 @@
-
-use std::{io::{self, Read, Write}, net::{TcpListener, TcpStream}, process::exit, time::Duration};
 use console::{ask_default, confirm_or_exit, debug_msg_string};
-use net_util::{signal, stream_read};
-use tungstenite::{accept_hdr, handshake::{client::Request, server::Response}, WebSocket};
+use net_util::stream_read;
+use std::{
+    io::{self, Read, Write},
+    net::{TcpListener, TcpStream},
+    process::exit,
+    time::Duration,
+};
+use tungstenite::{
+    accept_hdr,
+    handshake::{client::Request, server::Response},
+    WebSocket,
+};
 
 mod console;
 mod net_util;
@@ -22,15 +30,18 @@ fn main() {
 
     let mut client = make_client();
     handshake(&mut client);
-    
+
     for stream in server.incoming() {
         match stream {
             Ok(stream) => {
-                let str_address = stream.local_addr().map(|a| a.to_string()).unwrap_or("unknown".to_string());
+                let str_address = stream
+                    .local_addr()
+                    .map(|a| a.to_string())
+                    .unwrap_or("unknown".to_string());
                 println!("Incoming connection from: {}", str_address);
 
                 let mut ws = init_websocket(&server, &stream);
-                
+
                 loop {
                     if !websocket_loop(&mut ws, &mut client) {
                         break;
@@ -38,7 +49,7 @@ fn main() {
 
                     impress_loop(&mut ws, &mut client);
                 }
-            },
+            }
             Err(err) => {
                 eprintln!("Incoming connection failed: {}", err);
                 return;
@@ -50,15 +61,13 @@ fn main() {
 fn init_websocket<'a>(server: &TcpListener, stream: &'a TcpStream) -> WebSocket<&'a TcpStream> {
     stream.set_nonblocking(false).unwrap();
 
-    let ws = accept_hdr(stream, |_req: &Request, res: Response| {
-        Ok(res)
-    });
-    
+    let ws = accept_hdr(stream, |_req: &Request, res: Response| Ok(res));
+
     match ws {
         Ok(ws) => {
             stream.set_nonblocking(true).unwrap();
             ws
-        },
+        }
         Err(err) => {
             eprintln!("Failed to initialize WebSocket: {}", err);
             exit(1);
@@ -78,23 +87,21 @@ fn make_server() -> TcpListener {
 
 fn websocket_loop<'a>(websocket: &mut WebSocket<&'a TcpStream>, impress_client: &mut TcpStream) -> bool {
     match websocket.read() {
-        Ok(msg) => {
-            match msg.to_text() {
-                Ok(str) => {
-                    let string = debug_msg_string(str.to_string());
-                    println!("WebSocket -> '{}' -> Impress", string);
-                },
-                Err(err) => eprintln!("Unable to decode data from WebSocket: {}", err)
+        Ok(msg) => match msg.to_text() {
+            Ok(str) => {
+                let string = debug_msg_string(str.to_string());
+                println!("WebSocket -> '{}' -> Impress", string);
             }
+            Err(err) => eprintln!("Unable to decode data from WebSocket: {}", err),
         },
         Err(err) => match err {
             tungstenite::Error::ConnectionClosed | tungstenite::Error::AlreadyClosed => {
                 println!("Disconnected, waiting for new connections");
                 return false;
-            },
+            }
             tungstenite::Error::Io(_) => (),
-            _ => eprintln!("WebSocket error: {}", err)
-        }
+            _ => eprintln!("WebSocket error: {}", err),
+        },
     };
 
     return true;
@@ -104,22 +111,22 @@ fn impress_loop<'a>(websocket: &mut WebSocket<&'a TcpStream>, impress_client: &m
     let mut buf = [0u8; 256];
 
     match impress_client.read(&mut buf) {
-        Ok(_) =>  {
+        Ok(_) => {
             let msg = String::from_utf8(buf.to_vec());
 
             match msg {
                 Ok(msg) => {
                     println!("Impress -> '{}' -> WebSocket", debug_msg_string(msg));
-                },
-                Err(err) => eprintln!("Invalid message from Impress: {}", err)
+                }
+                Err(err) => eprintln!("Invalid message from Impress: {}", err),
             }
-        },
+        }
         Err(err) => {
             let kind = err.kind();
 
             match kind {
                 io::ErrorKind::WouldBlock => (),
-                _ => eprintln!("Impress read error: {}", kind)
+                _ => eprintln!("Impress read error: {}", kind),
             }
         }
     }
@@ -133,7 +140,7 @@ fn handshake(stream: &mut TcpStream) {
 
     println!("PIN: {}", pin);
     println!("Go to 'Slide Show' > 'Impress Remote' and enter the pin");
-    
+
     await_auth(stream);
 }
 
@@ -142,28 +149,37 @@ fn await_auth(stream: &mut TcpStream) {
         let data = stream_read(stream);
 
         if data.contains("LO_SERVER_SERVER_PAIRED") {
-            println!("Pairing successful!");           
-            println!("Waiting for WebSocket connections at ws://localhost:{}", DEFAULT_SERVER_PORT);
-            
+            println!("Pairing successful!");
+            println!(
+                "Waiting for WebSocket connections at ws://localhost:{}",
+                DEFAULT_SERVER_PORT
+            );
+
             break;
         }
 
-        stream.set_nonblocking(true).expect("Unable to make nonblocking client");
+        stream
+            .set_nonblocking(true)
+            .expect("Unable to make nonblocking client");
     }
 }
 
 fn make_client() -> TcpStream {
     let ip = ask_default("IP address", DEFAULT_IP);
-    
+
     let stream_res = TcpStream::connect(format!("{}:{}", ip, DEFAULT_IMPRESS_PORT));
 
     match stream_res {
         Ok(stream) => {
-            stream.set_write_timeout(Some(TIMEOUT)).expect("Failed to set write timeout");
-            stream.set_read_timeout(Some(TIMEOUT)).expect("Failed to set read timeout");
+            stream
+                .set_write_timeout(Some(TIMEOUT))
+                .expect("Failed to set write timeout");
+            stream
+                .set_read_timeout(Some(TIMEOUT))
+                .expect("Failed to set read timeout");
 
             stream
-        },
+        }
         Err(err) => {
             eprintln!("Failed to connect: {}", err);
             confirm_or_exit("Try again?");
@@ -172,4 +188,3 @@ fn make_client() -> TcpStream {
         }
     }
 }
-

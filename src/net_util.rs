@@ -1,4 +1,7 @@
-use std::{io::{Read, Write}, net::TcpStream};
+use std::{
+    io::Read,
+    net::TcpStream,
+};
 
 pub fn stream_read(stream: &mut TcpStream) -> String {
     let mut buf = [0; 128];
@@ -6,8 +9,8 @@ pub fn stream_read(stream: &mut TcpStream) -> String {
     match stream.read(&mut buf) {
         Ok(_) => (),
         Err(err) => {
-            eprintln!("Read error: {}", err); 
-            return String::new(); 
+            eprintln!("Read error: {}", err);
+            return String::new();
         }
     };
 
@@ -20,6 +23,7 @@ pub fn stream_read(stream: &mut TcpStream) -> String {
     }
 }
 
+/*
 pub fn signal(stream: &mut TcpStream, message: impl Into<String>) {
     let msg = message.into();
     let data = format!("{}\n\n", msg);
@@ -29,3 +33,4 @@ pub fn signal(stream: &mut TcpStream, message: impl Into<String>) {
         0
     });
 }
+*/

@@ -1,4 +1,7 @@
-use std::{io::{self, BufRead, Write}, process::exit};
+use std::{
+    io::{self, BufRead, Write},
+    process::exit,
+};
 
 const MAX_MESSAGE_LEN: usize = 128;
 
