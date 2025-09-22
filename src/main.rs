@@ -18,7 +18,7 @@ const TIMEOUT: Duration = Duration::from_secs(5);
 fn main() {
     println!("Welcome to ImpressProxy");
 
-    let mut server = make_server();
+    let server = make_server();
 
     let mut client = make_client();
     handshake(&mut client);
@@ -30,7 +30,14 @@ fn main() {
                 println!("Incoming connection from: {}", str_address);
 
                 let mut ws = init_websocket(&server, &stream);
-                net_loop(&mut ws, &mut client);
+                
+                loop {
+                    if !websocket_loop(&mut ws, &mut client) {
+                        break;
+                    }
+                    
+                    impress_loop(&mut ws, &mut client);
+                }
             },
             Err(err) => {
                 eprintln!("Incoming connection failed: {}", err);
@@ -69,48 +76,50 @@ fn make_server() -> TcpListener {
     }
 }
 
-fn net_loop<'a>(websocket: &mut WebSocket<&'a TcpStream>, impress_client: &mut TcpStream) {
-    let mut impress_buf = [0u8; 256];
-    
-    loop {
-        match websocket.read() {
-            Ok(msg) => {
-                match msg.to_text() {
-                    Ok(str) => {
-                        let string = escape_nl(str.to_string());
-                        println!("WebSocket -> '{}' -> Impress", string);
-                    },
-                    Err(err) => eprintln!("Unable to decode data from WebSocket: {}", err)
-                }
-            },
-            Err(err) => match err {
-                tungstenite::Error::ConnectionClosed | tungstenite::Error::AlreadyClosed => {
-                    println!("Disconnected, waiting for new connections");
-                    break;
+fn websocket_loop<'a>(websocket: &mut WebSocket<&'a TcpStream>, impress_client: &mut TcpStream) -> bool {
+    match websocket.read() {
+        Ok(msg) => {
+            match msg.to_text() {
+                Ok(str) => {
+                    let string = escape_nl(str.to_string());
+                    println!("WebSocket -> '{}' -> Impress", string);
                 },
-                tungstenite::Error::Io(_) => (),
-                _ => eprintln!("WebSocket error: {}", err)
+                Err(err) => eprintln!("Unable to decode data from WebSocket: {}", err)
             }
-        }
-
-        match impress_client.read(&mut impress_buf) {
-            Ok(_) =>  {
-                let msg = String::from_utf8(impress_buf.to_vec());
-
-                match msg {
-                    Ok(msg) => {
-                        println!("Impress -> '{}' -> WebSocket", escape_nl(msg));
-                    },
-                    Err(err) => eprintln!("Invalid message from Impress: {}", err)
-                }
+        },
+        Err(err) => match err {
+            tungstenite::Error::ConnectionClosed | tungstenite::Error::AlreadyClosed => {
+                println!("Disconnected, waiting for new connections");
+                return false;
             },
-            Err(err) => {
-                let kind = err.kind();
+            tungstenite::Error::Io(_) => (),
+            _ => eprintln!("WebSocket error: {}", err)
+        }
+    };
 
-                match kind {
-                    io::ErrorKind::WouldBlock => (),
-                    _ => eprintln!("Impress read error: {}", kind)
-                }
+    return true;
+}
+
+fn impress_loop<'a>(websocket: &mut WebSocket<&'a TcpStream>, impress_client: &mut TcpStream) {
+    let mut buf = [0u8; 256];
+
+    match impress_client.read(&mut buf) {
+        Ok(_) =>  {
+            let msg = String::from_utf8(buf.to_vec());
+
+            match msg {
+                Ok(msg) => {
+                    println!("Impress -> '{}' -> WebSocket", escape_nl(msg));
+                },
+                Err(err) => eprintln!("Invalid message from Impress: {}", err)
+            }
+        },
+        Err(err) => {
+            let kind = err.kind();
+
+            match kind {
+                io::ErrorKind::WouldBlock => (),
+                _ => eprintln!("Impress read error: {}", kind)
             }
         }
     }
