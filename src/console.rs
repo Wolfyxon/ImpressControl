@@ -1,5 +1,7 @@
 use std::{io::{self, BufRead, Write}, process::exit};
 
+const MAX_MESSAGE_LEN: usize = 128;
+
 pub fn read_line() -> String {
     let stdin = io::stdin();
     let mut res = String::new();
@@ -42,6 +44,12 @@ pub fn confirm_or_exit(msg: impl Into<String>) {
     }
 }
 
-pub fn escape_nl(string: String) -> String {
-    string.replace("\n", "\\n")
+pub fn debug_msg_string(string: String) -> String {
+    let mut res = string.split("\n").next().unwrap().to_string();
+
+    if res.len() > MAX_MESSAGE_LEN {
+        res = format!("{}...", res[..MAX_MESSAGE_LEN].to_string());
+    }
+
+    res.replace("\n", "\\n")
 }

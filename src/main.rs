@@ -1,6 +1,6 @@
 
 use std::{io::{self, Read, Write}, net::{TcpListener, TcpStream}, process::exit, time::Duration};
-use console::{ask_default, confirm_or_exit, escape_nl};
+use console::{ask_default, confirm_or_exit, debug_msg_string};
 use net_util::{signal, stream_read};
 use tungstenite::{accept_hdr, handshake::{client::Request, server::Response}, WebSocket};
 
@@ -81,7 +81,7 @@ fn websocket_loop<'a>(websocket: &mut WebSocket<&'a TcpStream>, impress_client: 
         Ok(msg) => {
             match msg.to_text() {
                 Ok(str) => {
-                    let string = escape_nl(str.to_string());
+                    let string = debug_msg_string(str.to_string());
                     println!("WebSocket -> '{}' -> Impress", string);
                 },
                 Err(err) => eprintln!("Unable to decode data from WebSocket: {}", err)
@@ -109,7 +109,7 @@ fn impress_loop<'a>(websocket: &mut WebSocket<&'a TcpStream>, impress_client: &m
 
             match msg {
                 Ok(msg) => {
-                    println!("Impress -> '{}' -> WebSocket", escape_nl(msg));
+                    println!("Impress -> '{}' -> WebSocket", debug_msg_string(msg));
                 },
                 Err(err) => eprintln!("Invalid message from Impress: {}", err)
             }
