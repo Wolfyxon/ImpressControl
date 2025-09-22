@@ -8,7 +8,11 @@ A proxy for LibreOffice Impress Remote that allows the use of WebSocket.
 3. Run the program
 4. Enter the address (not entering anything and pressing enter will use default settings)
 5. Follow the pairing instructions as you'll see
-6. Use your WebSocket client to connect and communicate with the presentation
+6. Connect to `ws://localhost:1600` with your code.
+
+Port settings may be available in future.
+
+[Impress Remote Protocol documentation](https://cgit.freedesktop.org/libreoffice/core/tree/sd/README_REMOTE).
 
 ## Why
 It allows you to control presentations with browsers, which mostly only support WebSocket.  
@@ -16,7 +20,4 @@ It allows you to control presentations with browsers, which mostly only support 
 ## How it works
 This program runs a WebSocket server and a TCP client.
 
-Packets received from WebSocket are forwarded to TCP and vice versa.
-
-[Impress Remote Protocol documentation](https://cgit.freedesktop.org/libreoffice/core/tree/sd/README_REMOTE).
-
+It forwards packets between WebSocket (`1600`) and Impress Remote TCP (`1599`).
