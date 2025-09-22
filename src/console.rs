@@ -41,3 +41,7 @@ pub fn confirm_or_exit(msg: impl Into<String>) {
         exit(0);
     }
 }
+
+pub fn escape_nl(string: String) -> String {
+    string.replace("\n", "\\n")
+}
