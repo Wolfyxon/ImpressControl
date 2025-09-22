@@ -121,7 +121,7 @@ fn impress_loop<'a>(websocket: &mut WebSocket<&'a TcpStream>, impress_client: &m
                 Ok(msg) => {
                     println!("Impress -> '{}' -> WebSocket", debug_msg_string(msg.to_owned()));
 
-                    websocket.write(Message::text(msg)).unwrap_or_else(|err| {
+                    websocket.write(Message::text(msg.trim_matches('\0'))).unwrap_or_else(|err| {
                         eprintln!("Forward to WebSocket failed: {}", err);
                     });
 
