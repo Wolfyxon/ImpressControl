@@ -16,9 +16,7 @@ fn main() {
     println!("Welcome to ImpressProxy");
 
     let mut stream = make_stream();
-    stream.set_write_timeout(Some(TIMEOUT)).expect("Failed to set write timeout");
-    stream.set_read_timeout(Some(TIMEOUT)).expect("Failed to set read timeout");
-    
+
     handshake(&mut stream);
     //signal(&mut stream, "presentation_start");
 
@@ -53,7 +51,12 @@ fn make_stream() -> TcpStream {
     let stream_res = TcpStream::connect(format!("{}:{}", ip, DEFAULT_PORT));
 
     match stream_res {
-        Ok(stream) => stream,
+        Ok(stream) => {
+            stream.set_write_timeout(Some(TIMEOUT)).expect("Failed to set write timeout");
+            stream.set_read_timeout(Some(TIMEOUT)).expect("Failed to set read timeout");
+            
+            stream
+        },
         Err(err) => {
             eprintln!("Failed to connect: {}", err);
             confirm_or_exit("Try again?");
