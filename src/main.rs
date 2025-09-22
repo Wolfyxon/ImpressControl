@@ -21,7 +21,7 @@ const DEFAULT_IP: &str = "localhost";
 const DEFAULT_IMPRESS_PORT: u16 = 1599;
 const DEFAULT_SERVER_PORT: u16 = 1600;
 
-const TIMEOUT: Duration = Duration::from_secs(5);
+const TIMEOUT: Duration = Duration::from_millis(250);
 
 fn main() {
     println!("Welcome to ImpressProxy");
