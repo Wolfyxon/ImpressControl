@@ -1,7 +1,6 @@
 
 use std::{io::Write, net::TcpStream, time::Duration};
 use console::{ask_default, confirm_or_exit};
-use global_hotkey::{hotkey::{Code, HotKey}, GlobalHotKeyEvent, GlobalHotKeyManager, HotKeyState};
 use net_util::{signal, stream_read};
 
 mod console;
@@ -13,19 +12,9 @@ const DEFAULT_PORT: u16 = 1599;
 
 const TIMEOUT: Duration = Duration::from_secs(5);
 
-const KEY_PREV: Code = Code::KeyQ;
-const KEY_NEXT: Code = Code::KeyE;
-
 fn main() {
-    println!("Welcome to ImpressControl");
+    println!("Welcome to ImpressProxy");
 
-    let input_manager = GlobalHotKeyManager::new().expect("Failed to create keyboard input manager");
-    let key_prev = HotKey::new(None, KEY_PREV);
-    let key_next = HotKey::new(None, KEY_NEXT);
-    
-    input_manager.register(key_prev).expect("Failed to register key");
-    input_manager.register(key_next).expect("Failed to register key");
-    
     let mut stream = make_stream();
     stream.set_write_timeout(Some(TIMEOUT)).expect("Failed to set write timeout");
     stream.set_read_timeout(Some(TIMEOUT)).expect("Failed to set read timeout");
@@ -33,27 +22,6 @@ fn main() {
     handshake(&mut stream);
     //signal(&mut stream, "presentation_start");
 
-    loop {
-        process_input(&mut stream, &key_prev, &key_next);
-    }
-}
-
-fn process_input(stream: &mut TcpStream, key_prev: &HotKey, key_next: &HotKey) {
-    if let Ok(event) = GlobalHotKeyEvent::receiver().try_recv() {
-        if event.state() != HotKeyState::Pressed {
-            return;
-        }
-
-        if event.id() == key_prev.id() {
-            println!("> Previous");
-            signal(stream, "transition_previous");
-        }
-
-        if event.id() == key_next.id() {
-            println!("> Next");
-            signal(stream, "transition_next");
-        }
-    }
 }
 
 fn handshake(stream: &mut TcpStream) {
@@ -73,12 +41,7 @@ fn await_auth(stream: &mut TcpStream) {
         let data = stream_read(stream);
 
         if data.contains("LO_SERVER_SERVER_PAIRED") {
-            println!("Pairing successful! \n");
-            println!("Use the following keys to control the presentation: ");
-
-            println!("{}: Previous slide/animation", KEY_PREV);
-            println!("{}: Next slide/animation", KEY_NEXT);
-            
+            println!("Pairing successful! \n");            
             break;
         }
     }

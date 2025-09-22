@@ -1,7 +1,4 @@
 [package]
-name = "impress-control"
+name = "impress-proxy"
 version = "0.1.0"
 edition = "2021"
-
-[dependencies]
-global-hotkey = "0.7.0"

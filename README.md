@@ -1,5 +1,5 @@
-# ImpressControl
-A key based controller for LibreOffice Impress designed mostly to change slides of a presentation without having the window focused.
+# ImpressProxy
+A proxy for LibreOffice Impress Remote that allows the use of WebSocket.
 
 ## How to use
 ### Setting up
@@ -8,19 +8,15 @@ A key based controller for LibreOffice Impress designed mostly to change slides 
 3. Run the program
 4. Enter the address (not entering anything and pressing enter will use default settings)
 5. Follow the pairing instructions as you'll see
-6. Start the presentation
-7. You should now be able to control it as described below
+6. Use your WebSocket client to connect and communicate with the presentation
 
-### Controls
-(They always work, no matter if the program's window is focused) 
+## Why
+It allows you to control presentations with browsers, which mostly only support WebSocket.  
 
-- `Q` - previous slide/animation
-- `E` - next slide/animation
+## How it works
+This program runs a WebSocket server and a TCP client.
 
-I may add customization in future updates. 
-I didn't put much effort into this as I only needed this program for one quick thing.
+Packets received from WebSocket are forwarded to TCP and vice versa.
 
-## How it works:
-It uses a TCP connection to connect to Impress Remote.
+[Impress Remote Protocol documentation](https://cgit.freedesktop.org/libreoffice/core/tree/sd/README_REMOTE).
 
-See the [protocol documentation](https://cgit.freedesktop.org/libreoffice/core/tree/sd/README_REMOTE) for details.
