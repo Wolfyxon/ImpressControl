@@ -111,7 +111,7 @@ fn websocket_loop<'a>(websocket: &mut WebSocket<&'a TcpStream>, impress_client: 
 }
 
 fn impress_loop<'a>(websocket: &mut WebSocket<&'a TcpStream>, impress_client: &mut TcpStream) {
-    let mut buf = [0u8; 256];
+    let mut buf = [0u8; 4096];
 
     match impress_client.read(&mut buf) {
         Ok(_) => {
