@@ -7,9 +7,7 @@ use std::{
     time::Duration,
 };
 use tungstenite::{
-    accept_hdr,
-    handshake::{client::Request, server::Response},
-    WebSocket,
+    accept_hdr, handshake::{client::Request, server::Response}, Message, WebSocket
 };
 
 mod console;
@@ -91,6 +89,11 @@ fn websocket_loop<'a>(websocket: &mut WebSocket<&'a TcpStream>, impress_client: 
             Ok(str) => {
                 let string = debug_msg_string(str.to_string());
                 println!("WebSocket -> '{}' -> Impress", string);
+                
+                impress_client.write(str.as_bytes()).unwrap_or_else(|err| {
+                    eprintln!("Forward to Impress failed: {}", err);
+                    0
+                });
             }
             Err(err) => eprintln!("Unable to decode data from WebSocket: {}", err),
         },
@@ -116,7 +119,11 @@ fn impress_loop<'a>(websocket: &mut WebSocket<&'a TcpStream>, impress_client: &m
 
             match msg {
                 Ok(msg) => {
-                    println!("Impress -> '{}' -> WebSocket", debug_msg_string(msg));
+                    println!("Impress -> '{}' -> WebSocket", debug_msg_string(msg.to_owned()));
+
+                    websocket.write(Message::text(msg)).unwrap_or_else(|err| {
+                        eprintln!("Forward to WebSocket failed: {}", err);
+                    });
                 }
                 Err(err) => eprintln!("Invalid message from Impress: {}", err),
             }
